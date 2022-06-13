@@ -1,7 +1,11 @@
 import speech_recognition as sr
-import os
-import sys
 import pyttsx3
+from difflib import SequenceMatcher
+from parser import parse_file
+
+negative_lines = parse_file("negative.txt")
+neutral_lines = parse_file("neutral.txt")
+positive_lines = parse_file("positive.txt")
 
 
 def talk(words):
@@ -29,18 +33,26 @@ def command():
     return task
 
 
+def similar(task, lines):
+    for line in lines:
+        score = SequenceMatcher(None, task, line).ratio()
+        if score > 0.8:
+            return True
+    return False
+
+
 def recognize(task):
-    if 'да' in task:
-        talk("Вы сказали да")
-
-    elif 'нет' in task:
-        talk("Вы сказали нет")
-        sys.exit()
-    elif 'наверное' in task:
-        talk("Вы сказали наверное")
-
-    elif 'наверное' in task:
-        talk("Может быть")
+    is_negative = similar(task, negative_lines)
+    is_neutral = similar(task, neutral_lines)
+    is_positive = similar(task, positive_lines)
+    if is_negative:
+        talk("Это негативный ответ")
+    elif is_neutral:
+        talk("Это нейтральный ответ")
+    elif is_positive:
+        talk("Это положительный ответ")
+    else:
+        talk("Это другой ответ")
 
 
 while True:
